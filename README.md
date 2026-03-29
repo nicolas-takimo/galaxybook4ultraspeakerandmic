@@ -20,8 +20,8 @@ Este material foi validado neste ambiente:
 - Microfone interno digital visível como `DMIC Raw`.
 - Source padrão apontando para o microfone digital.
 - Câmera interna detectada via `libcamera`.
-- Relay V4L2 persistente via `camera-relay.service`.
 - Persistência após reboot com `LIBCAMERA_SOFTISP_MODE=cpu`.
+- `camera-relay.service` mantido como opção manual para apps V4L2 legados.
 - Nós crus do `IPU6` ocultados no WirePlumber para os apps não pegarem o dispositivo errado.
 
 ## Problema
@@ -47,6 +47,8 @@ Depois da instalação, o serviço `max98390-hda-i2c-setup.service` enumerou os 
 - `scripts/install-speaker-fix.sh`: instala a correção de speaker usando o projeto upstream.
 - `scripts/install-webcam-fix.sh`: instala a correção da webcam usando o projeto upstream.
 - `scripts/install-camera-user-overrides.sh`: aplica os overrides locais que deixaram a câmera estável neste modelo.
+- `scripts/start-camera-relay.sh`: sobe o relay V4L2 manualmente para apps que não usam PipeWire.
+- `scripts/stop-camera-relay.sh`: para o relay V4L2.
 - `scripts/fix-runtime-speakers.sh`: sobe o serviço de enumeração dos amplificadores sem reboot.
 - `scripts/check-audio-status.sh`: mostra estado atual de sink, source, DKMS, módulos e logs.
 - `scripts/check-camera-status.sh`: mostra estado atual da câmera, relay, PipeWire e serviços.
@@ -85,7 +87,7 @@ O fluxo da câmera faz isto:
 - instala `libcamera`, `PipeWire` e `camera-relay` pelo projeto upstream
 - cria overrides de usuário para forçar `LIBCAMERA_SOFTISP_MODE=cpu`
 - adiciona um filtro leve no relay para reduzir ruído visível
-- garante o `camera-relay.service` no login
+- deixa o relay manual para não quebrar apps PipeWire no boot
 
 ## Verificação da câmera
 
@@ -133,9 +135,9 @@ Depois da correção:
 
 Depois da correção da câmera:
 
-- `camera-relay status` deve mostrar `Persistent: ENABLED`
-- `wpctl status` deve mostrar `Camera Relay` e `ov02c10`
-- o app deve usar `Camera Relay (V4L2)` ou `Câmera frontal interna`
+- `wpctl status` deve mostrar `ov02c10`
+- o app deve usar `Câmera frontal interna` nos apps PipeWire
+- o relay V4L2 pode ser iniciado manualmente para apps legados
 - `test-camera-frame.sh` deve gerar um JPEG em `~/Imagens` ou no caminho informado
 
 ## Observações
@@ -144,6 +146,8 @@ Depois da correção da câmera:
 - Se o áudio sair só de um lado, rode `./scripts/fix-runtime-speakers.sh` e confira os logs.
 - A câmera ainda pode ter mais ruído que no Windows em ambiente escuro. Neste modelo o sensor sobe com ganho alto no Linux quando a iluminação é fraca.
 - Em máquinas com GPU NVIDIA, deixar `LIBCAMERA_SOFTISP_MODE=cpu` evita frames pretos ou debayer quebrado.
+- O `camera-relay.service` não sobe automaticamente neste perfil porque alguns apps PipeWire, como o GNOME Snapshot, podem falhar ao enumerar o relay no login.
+- Para apps V4L2 legados, suba o relay manualmente com `./scripts/start-camera-relay.sh`.
 - Se um app listar um monte de entradas `ipu6`, aplique `install-camera-user-overrides.sh` e reinicie a sessão.
 - Se Secure Boot estiver ativo, pode ser necessário enrolar chave MOK para módulos DKMS.
 - Este material não copia o código upstream. Ele apenas automatiza a instalação e documenta o que foi validado.
