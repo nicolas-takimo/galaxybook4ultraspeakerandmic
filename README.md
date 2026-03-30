@@ -48,6 +48,7 @@ Depois da instalação, o serviço `max98390-hda-i2c-setup.service` enumerou os 
 - `scripts/install-webcam-fix.sh`: instala a correção da webcam usando o projeto upstream.
 - `scripts/install-camera-user-overrides.sh`: aplica os overrides locais que deixaram a câmera estável neste modelo.
 - `scripts/fix-camera-loopback.sh`: recarrega o `v4l2loopback` com `exclusive_caps=1` e reinicia a stack de câmera da sessão.
+- `scripts/camera-relay-control.sh`: controle de ativar/desativar relay com auto-correção do loopback quando necessário.
 - `scripts/start-camera-relay.sh`: sobe o relay V4L2 manualmente para apps que não usam PipeWire.
 - `scripts/stop-camera-relay.sh`: para o relay V4L2.
 - `scripts/fix-runtime-speakers.sh`: sobe o serviço de enumeração dos amplificadores sem reboot.
@@ -90,6 +91,7 @@ O fluxo da câmera faz isto:
 - cria um serviço explícito com `gst-launch-1.0` para não depender do wrapper do `camera-relay`
 - fixa a saída do relay em `YUY2`, que foi o formato estável validado neste modelo
 - instala `~/.local/bin/fix-camera-loopback` para recuperação rápida pós-reboot
+- instala `~/.local/bin/camera-relay-control` e atalho gráfico `Camera Relay`
 - oculta o source quebrado direto do `libcamera` no `WirePlumber`
 - deixa o relay manual para não deixar a câmera ligada o tempo todo
 
