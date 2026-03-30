@@ -47,6 +47,7 @@ Depois da instalação, o serviço `max98390-hda-i2c-setup.service` enumerou os 
 - `scripts/install-speaker-fix.sh`: instala a correção de speaker usando o projeto upstream.
 - `scripts/install-webcam-fix.sh`: instala a correção da webcam usando o projeto upstream.
 - `scripts/install-camera-user-overrides.sh`: aplica os overrides locais que deixaram a câmera estável neste modelo.
+- `scripts/fix-camera-loopback.sh`: recarrega o `v4l2loopback` com `exclusive_caps=1` e reinicia a stack de câmera da sessão.
 - `scripts/start-camera-relay.sh`: sobe o relay V4L2 manualmente para apps que não usam PipeWire.
 - `scripts/stop-camera-relay.sh`: para o relay V4L2.
 - `scripts/fix-runtime-speakers.sh`: sobe o serviço de enumeração dos amplificadores sem reboot.
@@ -88,6 +89,7 @@ O fluxo da câmera faz isto:
 - cria overrides de usuário para forçar `LIBCAMERA_SOFTISP_MODE=cpu`
 - cria um serviço explícito com `gst-launch-1.0` para não depender do wrapper do `camera-relay`
 - fixa a saída do relay em `YUY2`, que foi o formato estável validado neste modelo
+- instala `~/.local/bin/fix-camera-loopback` para recuperação rápida pós-reboot
 - oculta o source quebrado direto do `libcamera` no `WirePlumber`
 - deixa o relay manual para não deixar a câmera ligada o tempo todo
 
@@ -103,6 +105,12 @@ Teste de frame:
 
 ```bash
 ./scripts/test-camera-frame.sh
+```
+
+Se o navegador não listar câmera após reboot:
+
+```bash
+./scripts/fix-camera-loopback.sh
 ```
 
 ## Verificação
@@ -150,6 +158,8 @@ Depois da correção da câmera:
 - Em máquinas com GPU NVIDIA, deixar `LIBCAMERA_SOFTISP_MODE=cpu` evita frames pretos ou debayer quebrado.
 - O `camera-relay.service` não sobe automaticamente neste perfil para não deixar a câmera ligada sem uso.
 - Para usar a câmera via relay, suba manualmente com `./scripts/start-camera-relay.sh` ou pelo atalho gráfico `Camera Relay`.
+- O `start-camera-relay.sh` agora valida se o loopback está em modo de webcam (`exclusive_caps=1`) e tenta corrigir automaticamente quando necessário.
+- Se aparecer erro de módulo em uso, feche apps que usam câmera e rode `./scripts/fix-camera-loopback.sh`.
 - Se um app listar um monte de entradas `ipu6`, aplique `install-camera-user-overrides.sh` e reinicie a sessão.
 - Se Secure Boot estiver ativo, pode ser necessário enrolar chave MOK para módulos DKMS.
 - Este material não copia o código upstream. Ele apenas automatiza a instalação e documenta o que foi validado.
